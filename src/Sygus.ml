@@ -126,6 +126,14 @@ let valid_ident (name : string) =
 
 let char_to_bool (c : char) = if Char.(c = '0') then false else true
 
+let has_standard_extension (s : string) =
+  try
+    let ext = Caml.Filename.extension s in
+    String.equal ext ".sl"
+  with
+  | _ -> false
+;;
+
 (* ============================================================================================= *)
 (*                                      SOLVER RESPONSES                                         *)
 (* ============================================================================================= *)

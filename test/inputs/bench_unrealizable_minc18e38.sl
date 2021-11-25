@@ -1,0 +1,8 @@
+(set-logic LIA)
+(define-fun min ((x Int) (y Int)) Int (ite (<= x y) x y))
+(synth-fun xi_1 ((x0 Int)) Int ((Ix Int) (Ic Int))
+ ((Ix Int (Ic x0 (- Ix) (+ Ix Ix) (min Ix Ix))) (Ic Int ((Constant Int)))))
+(declare-var i Int)
+(declare-var i1 Int)
+(constraint (= (min i i1) (xi_1 i)))
+(check-synth)

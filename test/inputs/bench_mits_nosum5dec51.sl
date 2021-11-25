@@ -1,0 +1,15 @@
+(set-logic DTLIA)
+(define-fun max ((x Int) (y Int)) Int (ite (>= x y) x y))
+(synth-fun join11 ((x162 Int) (x163 (Tuple Int Int)) (x164 (Tuple Int Int))) Int
+ ((Ix Int) (Ic Int))
+ ((Ix Int
+   (Ic x162 ((_ tupSel 0) x163) ((_ tupSel 1) x163) ((_ tupSel 0) x164) 
+    ((_ tupSel 1) x164) (- Ix) (+ Ix Ix) (max Ix Ix)))
+  (Ic Int ((Constant Int)))))
+(declare-var p2 Int)
+(declare-var i11 Int)
+(declare-var i12 Int)
+(constraint (= (+ p2 i11) (join11 p2 (mkTuple (max (+ 0 i11) 0) i11) (mkTuple 0 0))))
+(constraint (= (+ p2 i12) (join11 p2 (mkTuple 0 0) (mkTuple (max (+ 0 i12) 0) i12))))
+(constraint (= p2 (join11 p2 (mkTuple 0 0) (mkTuple 0 0))))
+(check-synth)

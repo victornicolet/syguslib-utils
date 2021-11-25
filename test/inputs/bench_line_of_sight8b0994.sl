@@ -1,0 +1,21 @@
+(set-logic DTLIA)
+(define-fun max ((x Int) (y Int)) Int (ite (>= x y) x y))
+(synth-fun odot0 ((x11 (Tuple Int Int Bool)) (x12 (Tuple Int Int Bool))) Int
+ ((Ix Int) (Ic Int) (Ipred Bool))
+ ((Ix Int
+   (Ic ((_ tupSel 0) x11) ((_ tupSel 1) x11) ((_ tupSel 0) x12) ((_ tupSel 1) x12) 
+    (- Ix) (+ Ix Ix) (max Ix Ix) (ite Ipred Ix Ix)))
+  (Ic Int ((Constant Int)))
+  (Ipred Bool
+   (((_ tupSel 2) x11) ((_ tupSel 2) x12) (= Ix Ix) (> Ix Ix) (not Ipred) 
+    (and Ipred Ipred) (or Ipred Ipred)))))
+(declare-var p4 Int)
+(declare-var i3 Int)
+(declare-var i4 Int)
+(declare-var i7 Int)
+(declare-var i8 Int)
+(declare-var b2 Bool)
+(declare-var i10 Int)
+(constraint (= p4 (odot0 (mkTuple p4 p4 true) (mkTuple i7 i8 b2))))
+(constraint (= i3 (odot0 (mkTuple i3 (max i10 i3) (> i3 i10)) (mkTuple i4 i4 true))))
+(check-synth)

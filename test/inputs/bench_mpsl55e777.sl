@@ -1,0 +1,5 @@
+(set-logic LIA)
+(synth-fun s01 () Int ((Ix Int) (Ic Int))
+ ((Ix Int (Ic (- Ix) (+ Ix Ix))) (Ic Int ((Constant Int)))))
+(constraint (= 0 s01))
+(check-synth)

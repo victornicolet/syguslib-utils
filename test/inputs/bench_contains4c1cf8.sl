@@ -1,0 +1,12 @@
+(set-logic LIA)
+(synth-fun xi_2 ((x14 Int) (x15 Int) (x16 Bool) (x17 Bool)) Bool ((Ipred Bool) (Ix Int) (Ic Int))
+ ((Ipred Bool (x16 x17 (not Ipred) (and Ipred Ipred) (or Ipred Ipred) (= Ix Ix) (> Ix Ix)))
+  (Ix Int (Ic x14 x15 (- Ix) (+ Ix Ix) (ite Ipred Ix Ix))) (Ic Int ((Constant Int)))))
+(declare-var x Int)
+(declare-var i Int)
+(declare-var i2 Int)
+(declare-var b1 Bool)
+(constraint
+ (or (not (and (or (not (< x i)) (> i2 x)) (not (< x i))))
+  (= (or (= i2 x) (or (= i x) b1)) (xi_2 x i b1 (= i2 x)))))
+(check-synth)

@@ -1,0 +1,22 @@
+(set-logic DTLIA)
+(synth-fun odot ((x1 (Tuple Int Int Bool)) (x2 (Tuple Int Int Bool))) 
+ (Tuple Int Int Bool) ((Tr (Tuple Int Int Bool)) (Ix Int) (Ic Int) (Ipred Bool))
+ ((Tr (Tuple Int Int Bool) ((mkTuple Ix Ix Ipred)))
+  (Ix Int
+   (Ic ((_ tupSel 0) x1) ((_ tupSel 1) x1) ((_ tupSel 0) x2) ((_ tupSel 1) x2) 
+    (- Ix) (+ Ix Ix) (ite Ipred Ix Ix)))
+  (Ic Int ((Constant Int)))
+  (Ipred Bool
+   (((_ tupSel 2) x1) ((_ tupSel 2) x2) (= Ix Ix) (> Ix Ix) (not Ipred) 
+    (and Ipred Ipred) (or Ipred Ipred)))))
+(declare-var p4 Int)
+(declare-var p7 Int)
+(declare-var p10 Int)
+(declare-var i5 Int)
+(declare-var i6 Int)
+(declare-var b2 Bool)
+(constraint (= (mkTuple p4 i6 (and b2 (< p4 i5))) (odot (mkTuple p4 p4 true) (mkTuple i5 i6 b2))))
+(constraint
+ (= (mkTuple p7 i6 (and (and b2 (< p10 i5)) (< p7 p10)))
+  (odot (mkTuple p7 p10 (and true (< p7 p10))) (mkTuple i5 i6 b2))))
+(check-synth)

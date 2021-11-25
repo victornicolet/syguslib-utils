@@ -22,7 +22,7 @@
  (description
   "SyGuS Language Standard v2.1 parser with utils for using SyGuS solvers.")
  (depends
-  (base
+  (core
    (>= v0.14.0))
   (fileutils
    (>= 0.6.3))

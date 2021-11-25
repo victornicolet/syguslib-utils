@@ -125,6 +125,9 @@ val digits : char list
 (** Returns true if the string is a valid identifier in SyGuS.  *)
 val valid_ident : symbol -> bool
 
+(** Checks that a filename has the standard extension (.sl) *)
+val has_standard_extension : string -> bool
+
 val char_to_bool : char -> bool
 
 (** {1 Solver specific types.} *)

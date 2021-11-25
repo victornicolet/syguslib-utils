@@ -1,0 +1,8 @@
+(set-logic LIA)
+(define-fun max ((x Int) (y Int)) Int (ite (>= x y) x y))
+(synth-fun join ((x Int)) Int ((Ix Int) (Ic Int))
+ ((Ix Int (Ic x (- Ix) (+ Ix Ix) (max Ix Ix))) (Ic Int ((Constant Int)))))
+(declare-var p Int)
+(declare-var i Int)
+(constraint (= (max p i) (join p)))
+(check-synth)

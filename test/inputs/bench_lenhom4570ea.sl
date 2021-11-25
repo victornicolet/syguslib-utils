@@ -1,0 +1,7 @@
+(set-logic LIA)
+(synth-fun odot ((x0 Int) (x1 Int)) Int ((Ix Int) (Ic Int))
+ ((Ix Int (Ic x0 x1 (- Ix) (+ Ix Ix))) (Ic Int ((Constant Int)))))
+(declare-var i Int)
+(constraint (= i (odot 0 i)))
+(constraint (= (+ 1 i) (odot (+ 1 0) i)))
+(check-synth)
