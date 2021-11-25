@@ -1,0 +1,3 @@
+(library
+ (name syguslib)
+ (libraries fmt base stdio sexplib lwt lwt.unix))
