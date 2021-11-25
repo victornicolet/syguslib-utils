@@ -17,14 +17,10 @@ depends: [
   "getopt" {>= "20120615"}
   "lwt" {>= "5.4.0"}
   "lwt_ppx" {>= "2.0.0"}
-  "menhir" {>= "20200624"}
   "odoc" {>= "1.5.0"}
   "parsexp" {>= "v0.14.0"}
   "stdio" {>= "v0.14.0"}
-  "ppx_sexp_conv" {>= "v0.14.0"}
-  "ppx_optcomp" {>= "v0.14.0"}
   "sexplib" {>= "v0.14.0"}
-  "yojson" {>= "1.6.0"}
 ]
 build: [
   ["dune" "subst"] {dev}

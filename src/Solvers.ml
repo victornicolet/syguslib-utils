@@ -1,5 +1,7 @@
 open Base
 open Sygus
+open Parser
+open Semantic
 open Sexplib
 open Lwt_process
 module OC = Stdio.Out_channel
@@ -72,7 +74,7 @@ let commands_to_file (commands : program) (filename : string) =
   Fmt.set_utf_8 fout false;
   Stdlib.Format.pp_set_margin fout 100;
   List.iter commands ~f:(fun c ->
-      SyCommand.pp_hum fout c;
+      Command.pp_hum fout c;
       Fmt.(pf fout "@."));
   OC.close out_chan
 ;;
