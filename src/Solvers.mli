@@ -1,6 +1,6 @@
 (**
     This module contains functions to interface with syntax-guided synthesis solvers using
-    the SyGuS Language Standard Version 2 or 1 defined in {!module-SyGuS}.
+    the SyGuS Language Standard Version 2 or 1 defined in {!module-Sygus}.
     The synchronous and asynchronous solvers defined here are functors parametric on Logger and
     Statistics modules to automate logging on some output and collecting statistics
     on solver usage.

@@ -1,11 +1,10 @@
 (** A Sygus command or a sygus term is an s-expression. This modules defines functions
-    to convert from a SyGuS term to an s-expression.
+    to convert from a SyGuS term to an s-expression. The functions in this module should
+    be self-explanatory.
 *)
+
 val sexp_of_symbol : string -> Sexplib0.Sexp.t
-
-(** Keywords in sygus begin with :  *)
 val keyword_of_string : string -> string
-
 val sexp_of_attribute : Sygus.attribute -> Sexplib0.Sexp.t list
 val sexp_of_index : Sygus.index -> Sexplib0.Sexp.t
 val sexp_of_identifier : Sygus.identifier -> Sexplib0.Sexp.t

@@ -133,7 +133,7 @@ and grammar_def = (sorted_var * grouped_rule_list) list
 
 and grouped_rule_list = sygus_gsterm list
 
-(** A gramamr term in SyGuS.  *)
+(** A grammar term in SyGuS.  *)
 and sygus_gsterm =
   | GConstant of sygus_sort (** A constant stands for any constant of a given sort.  *)
   | GTerm of sygus_term

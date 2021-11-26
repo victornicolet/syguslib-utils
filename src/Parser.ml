@@ -2,10 +2,14 @@ open Base
 open Sexplib
 open Sygus
 
+exception ParseError of Sexp.t * string
+
+let raise_parse_error (s : Sexp.t) (msg : string) = raise (ParseError (s, msg))
+
 let symbol_of_sexp (s : Sexp.t) : symbol =
   match s with
   | Atom symb -> symb
-  | _ -> failwith (Fmt.str "%a is not a symbol" Sexp.pp_hum s)
+  | _ -> raise_parse_error s "Not a symbol"
 ;;
 
 let keyword_of_sexp (s : Sexp.t) : string option =
@@ -21,7 +25,7 @@ let feature_of_sexp (s : Sexp.t) : (feature, string) Result.t =
   | Some "recursion" -> Ok FRecursion
   | Some "oracles" -> Ok FOracles
   | Some "weights" -> Ok FWeights
-  | _ -> Error Fmt.(str "%a is not a feature" Sexp.pp_hum s)
+  | _ -> raise_parse_error s "Not a valid feature"
 ;;
 
 let attributes_of_sexps (sl : Sexp.t list) : (attribute list, string) Result.t =
@@ -50,7 +54,7 @@ let index_of_sexp (s : Sexp.t) : index =
     (match Caml.int_of_string_opt s with
     | Some i -> INum i
     | None -> ISym s)
-  | _ -> failwith "Not an index"
+  | _ -> raise_parse_error s "Not an index"
 ;;
 
 let identifier_of_sexp (s : Sexp.t) : identifier =
@@ -58,7 +62,7 @@ let identifier_of_sexp (s : Sexp.t) : identifier =
   | Atom name -> if valid_ident name then IdSimple name else failwith "Not an identifier."
   | List (Atom "_" :: main_s :: i0 :: indexes) ->
     IdIndexed (symbol_of_sexp main_s, List.map ~f:index_of_sexp (i0 :: indexes))
-  | _ -> failwith "Not an identifier."
+  | _ -> raise_parse_error s "Not an identifier."
 ;;
 
 let rec sygus_sort_of_sexp (s : Sexp.t) : sygus_sort =
@@ -67,13 +71,13 @@ let rec sygus_sort_of_sexp (s : Sexp.t) : sygus_sort =
     (match s with
     | List (id :: s1 :: sygus_sorts) ->
       SApp (identifier_of_sexp id, List.map ~f:sygus_sort_of_sexp (s1 :: sygus_sorts))
-    | _ -> failwith "Not a sygus_sort")
+    | _ -> raise_parse_error s "Not a sygus_sort")
 ;;
 
 let sorted_var_of_sexp (s : Sexp.t) : sorted_var =
   match s with
   | List [ symb; sygus_sort ] -> symbol_of_sexp symb, sygus_sort_of_sexp sygus_sort
-  | _ -> failwith (Fmt.str "Not a sygus_sorted var: %a" Sexp.pp_hum s)
+  | _ -> raise_parse_error s "Not a sygus_sorted var."
 ;;
 
 let literal_of_string (s : string) : literal =
@@ -95,13 +99,13 @@ let literal_of_string (s : string) : literal =
       | None ->
         (match Caml.float_of_string_opt s with
         | Some f -> LitDec f
-        | None -> failwith "Not a literal.")))
+        | None -> raise_parse_error (Atom s) "Not a literal.")))
 ;;
 
 let literal_of_sexp (s : Sexp.t) : literal =
   match s with
   | Atom atom -> literal_of_string atom
-  | _ -> failwith "not a literal"
+  | _ -> raise_parse_error s "Not a literal."
 ;;
 
 let rec sygus_term_of_sexp (s : Sexp.t) : sygus_term =
@@ -115,36 +119,38 @@ let rec sygus_term_of_sexp (s : Sexp.t) : sygus_term =
   | List (hd :: tl) -> SyApp (identifier_of_sexp hd, List.map ~f:sygus_term_of_sexp tl)
   | _ ->
     (try SyLit (literal_of_sexp s) with
-    | _ -> SyId (identifier_of_sexp s))
+    | _ ->
+      (try SyId (identifier_of_sexp s) with
+      | ParseError (s, msg) -> raise_parse_error s (msg ^ "(while parsing a term)")))
 
 and binding_of_sexp (s : Sexp.t) : binding =
   match s with
   | List [ symb; sygus_term ] -> symbol_of_sexp symb, sygus_term_of_sexp sygus_term
-  | _ -> failwith "not a binding"
+  | _ -> raise_parse_error s "not a binding"
 ;;
 
 let sygus_sort_decl_of_sexp (s : Sexp.t) : sygus_sort_decl =
   match s with
   | List [ symb; Atom num ] -> symbol_of_sexp symb, Int.of_string num
-  | _ -> failwith "Not a sygus_sort declaration."
+  | _ -> raise_parse_error s "Not a sygus_sort declaration."
 ;;
 
 let dt_cons_dec_of_sexp (s : Sexp.t) : dt_cons_dec =
   match s with
   | List (symb :: args) -> symbol_of_sexp symb, List.map ~f:sorted_var_of_sexp args
-  | _ -> failwith "Not a data constructor declaration."
+  | _ -> raise_parse_error s "Not a data constructor declaration."
 ;;
 
 let dt_cons_dec_list_of_sexp (s : Sexp.t) : dt_cons_dec list =
   match s with
   | List (d1 :: drest) -> List.map ~f:dt_cons_dec_of_sexp (d1 :: drest)
-  | _ -> failwith "Not a list+ of data constructor declarations."
+  | _ -> raise_parse_error s "Not a list+ of data constructor declarations."
 ;;
 
 let sygus_sort_decl_list_of_sexp (s : Sexp.t) : sygus_sort_decl list =
   match s with
   | List (sd1 :: sdrest) -> List.map ~f:sygus_sort_decl_of_sexp (sd1 :: sdrest)
-  | _ -> failwith "Not a list+ of sygus_sort declarations."
+  | _ -> raise_parse_error s "Not a list+ of sygus_sort declarations."
 ;;
 
 let sygus_gsterm_of_sexp (s : Sexp.t) : sygus_gsterm =
@@ -153,7 +159,8 @@ let sygus_gsterm_of_sexp (s : Sexp.t) : sygus_gsterm =
   | List [ Atom "Variable"; sygus_sort ] -> GVar (sygus_sort_of_sexp sygus_sort)
   | t ->
     (try GTerm (sygus_term_of_sexp t) with
-    | _ -> failwith (Fmt.str "Not a grammar sygus_term (%a)" Sexp.pp s))
+    | ParseError (s, msg) ->
+      raise_parse_error s (msg ^ "(while parsing a sygus grammar term)"))
 ;;
 
 let pre_grouped_rule_of_sexp (s : Sexp.t) =
@@ -162,7 +169,7 @@ let pre_grouped_rule_of_sexp (s : Sexp.t) =
     ( symbol_of_sexp name
     , sygus_sort_of_sexp sygus_sort
     , List.map ~f:sygus_gsterm_of_sexp gramsygus_terms )
-  | _ -> failwith "Not a grouped rule."
+  | _ -> raise_parse_error s "Not a grouped rule."
 ;;
 
 let grammar_def_of_sexps (sv : Sexp.t) (gr : Sexp.t) : grammar_def =
@@ -174,8 +181,11 @@ let grammar_def_of_sexps (sv : Sexp.t) (gr : Sexp.t) : grammar_def =
          (List.map ~f:pre_grouped_rule_of_sexp grouped_rules)
      with
     | Ok l -> List.map ~f:(fun (s, (_, _, g)) -> s, g) l
-    | _ -> failwith "Not a grammar definition.")
-  | _ -> failwith "Not a grammar definition."
+    | _ ->
+      raise_parse_error
+        (List [ sv; gr ])
+        "Number of non-terminal symbols and grammar rules do not match.")
+  | _ -> raise_parse_error (List [ sv; gr ]) "Not a grammar definition."
 ;;
 
 let command_of_sexp (s : Sexp.t) : command =
@@ -395,8 +405,8 @@ let command_of_sexp (s : Sexp.t) : command =
   | List (Atom command_name :: elts) ->
     (match command_of_elts command_name elts with
     | Ok c -> c
-    | Error msg -> failwith Fmt.(str "%a : %s" Sexp.pp s msg))
-  | _ -> failwith (Fmt.str "Not a command: %a." Sexp.pp_hum s)
+    | Error msg -> raise_parse_error s (msg ^ "(while parsing a command)"))
+  | _ -> raise_parse_error s "A command should start with a name."
 ;;
 
 let program_of_sexp_list (sexps : Sexp.t list) : program =
@@ -438,4 +448,8 @@ let reponse_of_sexps (s : Sexp.t list) : solver_response =
   match atomic_response s with
   | Some r -> r
   | None -> success_response s
+;;
+
+let sexp_parse (filename : string) =
+  program_of_sexp_list (Sexp.input_sexps (Stdio.In_channel.create filename))
 ;;

@@ -6,8 +6,24 @@ This project is an s-expression based parser as well as serializer for the [SyGu
 
 To build the project:
 
-```dune build```
+```
+dune build
+```
 
 and to run the tests:
 
-```dune runtest```
+```
+dune runtest
+```
+
+## Usage
+
+A quick way of parsing a SyGuS input is to use `sexp_parse` in the `Parser` module, for example:
+
+
+```
+program = Syguslib.Parser.sexp_parse "test/inputs/mpps_1.sl"
+```
+
+
+The documentation can be generated using ```dune build @doc```.
