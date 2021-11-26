@@ -304,25 +304,91 @@ let command_of_sexp (s : Sexp.t) : command =
           Option.(
             keyword_of_sexp kw >>| fun keyw -> CSetOption (keyw, literal_of_sexp lit))
       | _ -> Error "set-option takes a keyword and a literal as arguments.")
-    | "oracle-assume" -> Error "Oracle command oracle-assume is not supported yet."
+    | "oracle-assume" ->
+      (match sl with
+      | [ List q1; List q2; body; oname ] ->
+        Ok
+          (COracle
+             (OAssume
+                ( List.map ~f:sorted_var_of_sexp q1
+                , List.map ~f:sorted_var_of_sexp q2
+                , sygus_term_of_sexp body
+                , symbol_of_sexp oname )))
+      | _ ->
+        Error "Oracle command oracle-assume doesn't have the right number of arguments.")
     | "oracle-constraint" ->
-      Error "Oracle command oracle-constraint is not supported yet."
+      (match sl with
+      | [ List q1; List q2; body; oname ] ->
+        Ok
+          (COracle
+             (OConstraint
+                ( List.map ~f:sorted_var_of_sexp q1
+                , List.map ~f:sorted_var_of_sexp q2
+                , sygus_term_of_sexp body
+                , symbol_of_sexp oname )))
+      | _ ->
+        Error
+          "Oracle command oracle-constraint doesn't have the right number of arguments.")
     | "declare-oracle-fun" ->
-      Error "Oracle command declare-oracle-fun is not supported yet."
+      (match sl with
+      | [ name; List args; ret_sort; oname ] ->
+        Ok
+          (COracle
+             (ODeclareFun
+                ( symbol_of_sexp name
+                , List.map ~f:sygus_sort_of_sexp args
+                , sygus_sort_of_sexp ret_sort
+                , symbol_of_sexp oname )))
+      | _ ->
+        Error
+          "Oracle command declare-oracle-fun doesn't have the right number of arguments.")
     | "oracle-constraint-io" ->
-      Error "Oracle command oracle-constraint-io is not supported yet."
+      (match sl with
+      | [ s1; s2 ] -> Ok (COracle (OConstraintIO (symbol_of_sexp s1, symbol_of_sexp s2)))
+      | _ ->
+        Error "Oracle command oracle-constraint-io accepts exactly two symbol arguments.")
     | "oracle-constraint-cex" ->
-      Error "Oracle command oracle-constraint-cex is not supported yet."
+      (match sl with
+      | [ s1; s2 ] -> Ok (COracle (OConstraintCex (symbol_of_sexp s1, symbol_of_sexp s2)))
+      | _ ->
+        Error "Oracle command oracle-constraint-cex accepts exactly two symbol arguments.")
     | "oracle-constraint-membership" ->
-      Error "Oracle command oracle-constraint-membership is not supported yet."
+      (match sl with
+      | [ s1; s2 ] -> Ok (COracle (OConstraintMem (symbol_of_sexp s1, symbol_of_sexp s2)))
+      | _ ->
+        Error
+          "Oracle command oracle-constraint-membership accepts exactly two symbol \
+           arguments.")
     | "oracle-constraint-poswitness" ->
-      Error "Oracle command oracle-constraint-poswitness is not supported yet."
+      (match sl with
+      | [ s1; s2 ] ->
+        Ok (COracle (OConstraintPosw (symbol_of_sexp s1, symbol_of_sexp s2)))
+      | _ ->
+        Error
+          "Oracle command oracle-constraint-poswitness accepts exactly two symbol \
+           arguments.")
     | "oracle-constraint-negwitness" ->
-      Error "Oracle command oracle-constraint-negwitness is not supported yet."
+      (match sl with
+      | [ s1; s2 ] ->
+        Ok (COracle (OConstraintNegw (symbol_of_sexp s1, symbol_of_sexp s2)))
+      | _ ->
+        Error
+          "Oracle command oracle-constraint-negwitness accepts exactly two symbol \
+           arguments.")
     | "declare-correctness-oracle" ->
-      Error "Oracle command declare-correctness-oracle is not supported yet."
+      (match sl with
+      | [ s1; s2 ] -> Ok (COracle (OCorrectness (symbol_of_sexp s1, symbol_of_sexp s2)))
+      | _ ->
+        Error
+          "Oracle command oracle-correctness-oracle accepts exactly two symbol arguments.")
     | "declare-correctness-cex-oracle" ->
-      Error "Oracle command declare-correctness-cex-oracle is not supported yet."
+      (match sl with
+      | [ s1; s2 ] ->
+        Ok (COracle (OCorrectnessCex (symbol_of_sexp s1, symbol_of_sexp s2)))
+      | _ ->
+        Error
+          "Oracle command oracle-correctness-cex-oracle accepts exactly two symbol \
+           arguments.")
     | _ -> Error "I do not know this command"
   in
   match s with

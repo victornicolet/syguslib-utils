@@ -92,6 +92,8 @@ let declares (c : command) : symbol list =
   | COptimizeSynth _
   | CChcConstraint _
   | CConstraint _ -> []
+  | COracle (ODeclareFun (s, _, _, _)) -> [ s ]
+  | COracle _ -> []
   | CDeclareVar (s, _)
   | CSynthFun (s, _, _, _)
   | CSynthInv (s, _, _)

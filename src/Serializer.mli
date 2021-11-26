@@ -19,5 +19,6 @@ val sexp_of_sort_decl : Sygus.sygus_sort_decl -> Sexplib0.Sexp.t
 val sexp_of_dt_cons_dec : Sygus.dt_cons_dec -> Sexplib0.Sexp.t
 val sexp_of_sygus_gsterm : Sygus.sygus_gsterm -> Sexplib0.Sexp.t
 val sexp_of_grammar_def : Sygus.grammar_def -> Sexplib0.Sexp.t * Sexplib0.Sexp.t
+val sexp_of_oracle_command : Sygus.oracle_command -> Sexplib0.Sexp.t
 val sexp_of_command : Sygus.command -> Sexplib0.Sexp.t
 val sexp_list_of_program : Sygus.program -> Sexplib0.Sexp.t list

@@ -1,3 +1,4 @@
 (library
  (name syguslib)
+ (public_name syguslib-utils)
  (libraries fmt base stdio sexplib lwt lwt.unix))

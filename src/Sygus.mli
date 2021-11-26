@@ -100,6 +100,24 @@ type command =
   | CSetInfo of symbol * literal (** Setting some solver option.  *)
   | CSetLogic of symbol (** Setting the logic used.  *)
   | CSetOption of symbol * literal (** Setting some solver option.  *)
+  | COracle of oracle_command (** All the oracle commands are grouped under COracle. *)
+
+(** A different type is used to separate the oracle commands. *)
+and oracle_command =
+  | OAssume of sorted_var list * sorted_var list * sygus_term * symbol
+      (** Asert an oracle assumption. *)
+  | OConstraint of sorted_var list * sorted_var list * sygus_term * symbol
+      (** Assert and oracle constraint. *)
+  | ODeclareFun of symbol * sygus_sort list * sygus_sort * symbol
+      (** Declare an oracle functional symbol. *)
+  | OConstraintIO of symbol * symbol (** Declare an input-output oracle. *)
+  | OConstraintCex of symbol * symbol (** Declare a counterexample witness oracle. *)
+  | OConstraintMem of symbol * symbol (** Declare a membership-query oracle. *)
+  | OConstraintPosw of symbol * symbol (** Declare a positive witness oracle. *)
+  | OConstraintNegw of symbol * symbol (** Declare a negative witness oracle.  *)
+  | OCorrectness of symbol * symbol (** Declare a correctness oracle.  *)
+  | OCorrectnessCex of symbol * symbol
+      (** Declare a correctness oracle with counterexamples. *)
 
 (** A sort declaration is a name with an integer index.  *)
 and sygus_sort_decl = symbol * int

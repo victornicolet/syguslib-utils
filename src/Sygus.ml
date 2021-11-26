@@ -76,6 +76,19 @@ type command =
   | CSetInfo of symbol * literal
   | CSetLogic of symbol
   | CSetOption of symbol * literal
+  | COracle of oracle_command
+
+and oracle_command =
+  | OAssume of sorted_var list * sorted_var list * sygus_term * symbol
+  | OConstraint of sorted_var list * sorted_var list * sygus_term * symbol
+  | ODeclareFun of symbol * sygus_sort list * sygus_sort * symbol
+  | OConstraintIO of symbol * symbol
+  | OConstraintCex of symbol * symbol
+  | OConstraintMem of symbol * symbol
+  | OConstraintPosw of symbol * symbol
+  | OConstraintNegw of symbol * symbol
+  | OCorrectness of symbol * symbol
+  | OCorrectnessCex of symbol * symbol
 
 and sygus_sort_decl = symbol * int
 

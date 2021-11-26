@@ -114,6 +114,48 @@ let sexp_of_grammar_def (gr : grammar_def) : Sexp.t * Sexp.t =
   List headers, List grammar_decls
 ;;
 
+let sexp_of_oracle_command (oc : oracle_command) : Sexp.t =
+  match oc with
+  | OAssume (vars1, vars2, body, name) ->
+    List
+      [ Atom "oracle-assume"
+      ; List (List.map ~f:sexp_of_sorted_var vars1)
+      ; List (List.map ~f:sexp_of_sorted_var vars2)
+      ; sexp_of_sygus_term body
+      ; sexp_of_symbol name
+      ]
+  | OConstraint (vars1, vars2, body, name) ->
+    List
+      [ Atom "oracle-constraint"
+      ; List (List.map ~f:sexp_of_sorted_var vars1)
+      ; List (List.map ~f:sexp_of_sorted_var vars2)
+      ; sexp_of_sygus_term body
+      ; sexp_of_symbol name
+      ]
+  | ODeclareFun (name, args, ret_sort, oname) ->
+    List
+      [ Atom "declare-oracle-fun"
+      ; sexp_of_symbol name
+      ; List (List.map ~f:sexp_of_sygus_sort args)
+      ; sexp_of_sygus_sort ret_sort
+      ; sexp_of_symbol oname
+      ]
+  | OConstraintIO (s1, s2) ->
+    List [ Atom "oracle-constraint-io"; sexp_of_symbol s1; sexp_of_symbol s2 ]
+  | OConstraintCex (s1, s2) ->
+    List [ Atom "oracle-constraint-cex"; sexp_of_symbol s1; sexp_of_symbol s2 ]
+  | OConstraintMem (s1, s2) ->
+    List [ Atom "oracle-constraint-membership"; sexp_of_symbol s1; sexp_of_symbol s2 ]
+  | OConstraintPosw (s1, s2) ->
+    List [ Atom "oracle-constraint-poswitness"; sexp_of_symbol s1; sexp_of_symbol s2 ]
+  | OConstraintNegw (s1, s2) ->
+    List [ Atom "oracle-constraint-negwitness"; sexp_of_symbol s1; sexp_of_symbol s2 ]
+  | OCorrectness (s1, s2) ->
+    List [ Atom "declare-correctness-oracle"; sexp_of_symbol s1; sexp_of_symbol s2 ]
+  | OCorrectnessCex (s1, s2) ->
+    List [ Atom "declare-correctness-cex-oracle"; sexp_of_symbol s1; sexp_of_symbol s2 ]
+;;
+
 let sexp_of_command (c : command) : Sexp.t =
   match c with
   | CCheckSynth -> List [ Atom "check-synth" ]
@@ -223,6 +265,7 @@ let sexp_of_command (c : command) : Sexp.t =
   | CSetLogic sym -> List [ Atom "set-logic"; Atom sym ]
   | CSetOption (sym, lit) ->
     List [ Atom "set-option"; Atom (keyword_of_string sym); sexp_of_literal lit ]
+  | COracle oc -> sexp_of_oracle_command oc
 ;;
 
 let sexp_list_of_program (p : program) : Sexp.t list = List.map ~f:sexp_of_command p
