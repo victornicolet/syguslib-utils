@@ -10,6 +10,12 @@ open Sygus
 *)
 exception ParseError of Sexp.t * string
 
+(** An exception raise during parsing when an input does not conform to the new
+  v2.1 standard (e.g. and input of v1).
+  This exception contains the command resulting from parsing the input.
+*)
+exception NonConforming of command * string
+
 (** {1 Main entry points}  *)
 
 (** Parse a file using the s-epxression based parser.
@@ -19,7 +25,10 @@ val sexp_parse : string -> program
 
 (** Convert a s-expression into a command {!type:Sygus.command}.
   Raises {!exception:ParseError} if the s-expression is not a command.
+  Raises {!exception:NonConforming} is the s-expression is not a SyGuS
+  v2 command, byt may be a SyGuS v1 command.
   @raise ParseError
+  @raise NonConforming
   *)
 val command_of_sexp : Sexp.t -> command
 
@@ -27,6 +36,7 @@ val command_of_sexp : Sexp.t -> command
     commands.
     Raises {!exception:ParseError} if parsing one of the commands fails.
     @raise ParseError
+    @raise NonConforming
     *)
 val program_of_sexp_list : Sexp.t list -> program
 
@@ -126,4 +136,4 @@ val pre_grouped_rule_of_sexp : Sexplib0.Sexp.t -> string * sygus_sort * sygus_gs
 (** Convert a s-expression into a grammar definition.
   @raise ParseError
   *)
-val grammar_def_of_sexps : Sexp.t -> Sexp.t -> grammar_def
+val grammar_def_of_sexps : Sexp.t option -> Sexp.t -> grammar_def

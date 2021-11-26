@@ -3,8 +3,10 @@ open Sexplib
 open Sygus
 
 exception ParseError of Sexp.t * string
+exception NonConforming of command * string
 
 let raise_parse_error (s : Sexp.t) (msg : string) = raise (ParseError (s, msg))
+let raise_nonconforming (s : command) (msg : string) = raise (NonConforming (s, msg))
 
 let symbol_of_sexp (s : Sexp.t) : symbol =
   match s with
@@ -59,7 +61,10 @@ let index_of_sexp (s : Sexp.t) : index =
 
 let identifier_of_sexp (s : Sexp.t) : identifier =
   match s with
-  | Atom name -> if valid_ident name then IdSimple name else failwith "Not an identifier."
+  | Atom name ->
+    if valid_ident name
+    then IdSimple name
+    else raise_parse_error s (Fmt.str "%s is not an identifier." name)
   | List (Atom "_" :: main_s :: i0 :: indexes) ->
     IdIndexed (symbol_of_sexp main_s, List.map ~f:index_of_sexp (i0 :: indexes))
   | _ -> raise_parse_error s "Not an identifier."
@@ -81,7 +86,9 @@ let sorted_var_of_sexp (s : Sexp.t) : sorted_var =
 ;;
 
 let literal_of_string (s : string) : literal =
-  if String.is_prefix ~prefix:"\"" s
+  if String.is_empty s
+  then LitString s
+  else if String.is_prefix ~prefix:"\"" s
   then LitString s
   else if String.is_prefix ~prefix:"#x" s
   then LitHex (String.chop_prefix_exn ~prefix:"#x" s)
@@ -172,9 +179,9 @@ let pre_grouped_rule_of_sexp (s : Sexp.t) =
   | _ -> raise_parse_error s "Not a grouped rule."
 ;;
 
-let grammar_def_of_sexps (sv : Sexp.t) (gr : Sexp.t) : grammar_def =
+let grammar_def_of_sexps (sv : Sexp.t option) (gr : Sexp.t) : grammar_def =
   match sv, gr with
-  | List sygus_sorts, List grouped_rules ->
+  | Some (List sygus_sorts), List grouped_rules ->
     (match
        List.zip
          (List.map ~f:sorted_var_of_sexp sygus_sorts)
@@ -183,9 +190,12 @@ let grammar_def_of_sexps (sv : Sexp.t) (gr : Sexp.t) : grammar_def =
     | Ok l -> List.map ~f:(fun (s, (_, _, g)) -> s, g) l
     | _ ->
       raise_parse_error
-        (List [ sv; gr ])
+        (List [ List sygus_sorts; gr ])
         "Number of non-terminal symbols and grammar rules do not match.")
-  | _ -> raise_parse_error (List [ sv; gr ]) "Not a grammar definition."
+  | None, List grouped_rules ->
+    let l = List.map ~f:pre_grouped_rule_of_sexp grouped_rules in
+    List.map ~f:(fun (s, t, g) -> (s, t), g) l
+  | _ -> raise_parse_error (List [ gr ]) "Not a grammar definition."
 ;;
 
 let command_of_sexp (s : Sexp.t) : command =
@@ -252,7 +262,7 @@ let command_of_sexp (s : Sexp.t) : command =
              ( symbol_of_sexp name
              , List.map ~f:sorted_var_of_sexp args
              , sygus_sort_of_sexp ret_sort
-             , Some (grammar_def_of_sexps gd1 gd2) ))
+             , Some (grammar_def_of_sexps (Some gd1) gd2) ))
       | [ name; List args; ret_sort ] ->
         Ok
           (CSynthFun
@@ -260,6 +270,48 @@ let command_of_sexp (s : Sexp.t) : command =
              , List.map ~f:sorted_var_of_sexp args
              , sygus_sort_of_sexp ret_sort
              , None ))
+      | [ name; List args; ret_sort; gd2 ] ->
+        let v1 =
+          CSynthFun
+            ( symbol_of_sexp name
+            , List.map ~f:sorted_var_of_sexp args
+            , sygus_sort_of_sexp ret_sort
+            , Some (grammar_def_of_sexps None gd2) )
+        in
+        raise_nonconforming
+          v1
+          "This synth-fun should have non-terminal declarations before the grammar."
+      | _ ->
+        Error
+          "synth-fun takes as arguments a function name, variables with sorts a return \
+           sort and an optional grammar")
+    | "synth-inv" ->
+      (match sl with
+      | [ name; List args; gd1; gd2 ] ->
+        Ok
+          (CSynthFun
+             ( symbol_of_sexp name
+             , List.map ~f:sorted_var_of_sexp args
+             , sygus_sort_of_sexp (Atom "Bool")
+             , Some (grammar_def_of_sexps (Some gd1) gd2) ))
+      | [ name; List args ] ->
+        Ok
+          (CSynthFun
+             ( symbol_of_sexp name
+             , List.map ~f:sorted_var_of_sexp args
+             , sygus_sort_of_sexp (Atom "Bool")
+             , None ))
+      | [ name; List args; gd2 ] ->
+        let v1 =
+          CSynthFun
+            ( symbol_of_sexp name
+            , List.map ~f:sorted_var_of_sexp args
+            , sygus_sort_of_sexp (Atom "Bool")
+            , Some (grammar_def_of_sexps None gd2) )
+        in
+        raise_nonconforming
+          v1
+          "This synth-fun should have non-terminal declarations before the grammar."
       | _ ->
         Error
           "synth-fun takes as arguments a function name, variables with sorts a return \
@@ -399,7 +451,7 @@ let command_of_sexp (s : Sexp.t) : command =
         Error
           "Oracle command oracle-correctness-cex-oracle accepts exactly two symbol \
            arguments.")
-    | _ -> Error "I do not know this command"
+    | _ -> Error Fmt.(str "I do not know this command: %a" Sexp.pp_hum s)
   in
   match s with
   | List (Atom command_name :: elts) ->

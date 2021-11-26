@@ -1,6 +1,0 @@
-(set-logic DTLIA)
-(synth-fun oplus0 ((x (Tuple Int Int)) (x0 Int)) Int ((Ix Int) (Ic Int))
- ((Ix Int (Ic ((_ tupSel 0) x) ((_ tupSel 1) x) x0 (- Ix) (+ Ix Ix))) (Ic Int ((Constant Int)))))
-(declare-var p Int)
-(constraint (= p (oplus0 (mkTuple 0 0) p)))
-(check-synth)

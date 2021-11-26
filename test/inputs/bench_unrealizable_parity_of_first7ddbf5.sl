@@ -1,6 +1,0 @@
-(set-logic NIA)
-(synth-fun f0 () Int ((Ix Int) (Ic Int))
- ((Ix Int (Ic (- Ix) (+ Ix Ix))) (Ic Int ((Constant Int)))))
-(declare-var p Int)
-(constraint (= (mod p 2) f0))
-(check-synth)

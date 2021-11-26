@@ -1,8 +1,0 @@
-(set-logic LIA)
-(synth-fun odot ((x0 Int) (x1 Int)) Int ((Ix Int) (Ic Int))
- ((Ix Int (Ic x0 x1 (- Ix) (+ Ix Ix))) (Ic Int ((Constant Int)))))
-(declare-var p4 Int)
-(declare-var i Int)
-(constraint (= i (odot 0 i)))
-(constraint (= (+ p4 i) (odot (+ p4 0) i)))
-(check-synth)

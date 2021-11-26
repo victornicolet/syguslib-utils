@@ -1,6 +1,0 @@
-(set-logic LIA)
-(synth-fun add1 ((x2 Int)) Int ((Ix Int) (Ic Int))
- ((Ix Int (Ic x2 (- Ix) (+ Ix Ix))) (Ic Int ((Constant Int)))))
-(constraint (= 1 (add1 0)))
-(constraint (= 2 (add1 (+ 1 0))))
-(check-synth)
