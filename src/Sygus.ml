@@ -12,6 +12,10 @@ let use_v1 = ref false
 
 type symbol = string
 
+type attribute =
+  | Attr of symbol
+  | AttrVal of symbol * string
+
 type literal =
   | LitNum of int
   | LitDec of float
@@ -49,15 +53,21 @@ type feature =
   | FGrammar
   | FFwdDecls
   | FRecursion
+  | FOracles
+  | FWeights
 
 type command =
   | CCheckSynth
+  | CAssume of sygus_term
   | CConstraint of sygus_term
+  | CChcConstraint of sorted_var list * sygus_term * sygus_term
   | CDeclareVar of symbol * sygus_sort
+  | CDeclareWeight of symbol * attribute list
   | CInvConstraint of symbol * symbol * symbol * symbol
   | CSetFeature of feature * bool
   | CSynthFun of symbol * sorted_var list * sygus_sort * grammar_def option
   | CSynthInv of symbol * sorted_var list * grammar_def option
+  | COptimizeSynth of sygus_term list * attribute list
   | CDeclareDataType of symbol * dt_cons_dec list
   | CDeclareDataTypes of sygus_sort_decl list * dt_cons_dec list list
   | CDeclareSort of symbol * int

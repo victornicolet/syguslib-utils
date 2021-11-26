@@ -88,6 +88,9 @@ let declares (c : command) : symbol list =
   | CSetInfo _
   | CSetOption _
   | CSetLogic _
+  | CAssume _
+  | COptimizeSynth _
+  | CChcConstraint _
   | CConstraint _ -> []
   | CDeclareVar (s, _)
   | CSynthFun (s, _, _, _)
@@ -95,6 +98,7 @@ let declares (c : command) : symbol list =
   | CDeclareSort (s, _)
   | CDefineFun (s, _, _, _)
   | CDefineSort (s, _) -> [ s ]
+  | CDeclareWeight (s, _) -> [ s ]
   | CDeclareDataType (s, constrs) -> s :: List.map ~f:fst constrs
   | CDeclareDataTypes (sl, cd) ->
     List.map ~f:fst sl @ List.concat_map ~f:(List.map ~f:fst) cd

@@ -3,6 +3,7 @@
 *)
 
 val symbol_of_sexp : Sexplib0.Sexp.t -> string
+val feature_of_sexp : Sexplib0.Sexp.t -> (Sygus.feature, string) Result.t
 val index_of_sexp : Sexplib0.Sexp.t -> Sygus.index
 val identifier_of_sexp : Sexplib0.Sexp.t -> Sygus.identifier
 val sygus_sort_of_sexp : Sexplib0.Sexp.t -> Sygus.sygus_sort
@@ -11,7 +12,6 @@ val literal_of_string : string -> Sygus.literal
 val literal_of_sexp : Sexplib0.Sexp.t -> Sygus.literal
 val sygus_term_of_sexp : Sexplib0.Sexp.t -> Sygus.sygus_term
 val binding_of_sexp : Sexplib0.Sexp.t -> Sygus.binding
-val feature_of_sexp : Sexplib0.Sexp.t -> Sygus.feature
 val sygus_sort_decl_of_sexp : Sexplib0.Sexp.t -> Sygus.sygus_sort_decl
 val dt_cons_dec_list_of_sexp : Sexplib0.Sexp.t -> Sygus.dt_cons_dec list
 val sygus_sort_decl_list_of_sexp : Sexplib0.Sexp.t -> Sygus.sygus_sort_decl list

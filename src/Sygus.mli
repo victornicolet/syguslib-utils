@@ -10,6 +10,10 @@ val use_v1 : bool ref
 (** Symbols are just strings.  *)
 type symbol = string
 
+type attribute =
+  | Attr of symbol
+  | AttrVal of symbol * string
+
 (** SyGuS literals. *)
 type literal =
   | LitNum of int
@@ -61,14 +65,20 @@ type feature =
   | FGrammar
   | FFwdDecls
   | FRecursion
+  | FOracles
+  | FWeights
 
 (** The SyGuS commands  *)
 type command =
   | CCheckSynth (** The [(check-synth)] command for synthesis. *)
+  | CAssume of sygus_term (** The assume command. *)
   | CConstraint of sygus_term
       (** The constraint command to define a constraint with a term. *)
+  | CChcConstraint of sorted_var list * sygus_term * sygus_term
+      (** A command for specifying CHC constraints. *)
   | CDeclareVar of symbol * sygus_sort
       (** The declare command to declare a universally quantified variable. *)
+  | CDeclareWeight of symbol * attribute list (** Declaration of weight attributes. *)
   | CInvConstraint of symbol * symbol * symbol * symbol
       (** The inv-constraint command to constraint an invariant. *)
   | CSetFeature of feature * bool (** The set-feature command. *)
@@ -77,6 +87,8 @@ type command =
   | CSynthInv of symbol * sorted_var list * grammar_def option
       (** The synth-inv command is a shortcut for synth-fun when the function to be synthesized
         returns a boolean. It is printed as synth-fun ... Bool if use_v1 is false. *)
+  | COptimizeSynth of sygus_term list * attribute list
+      (** Command for specifying optimization queries. *)
   | CDeclareDataType of symbol * dt_cons_dec list
       (** A datatype declaration with a name and constructor list. *)
   | CDeclareDataTypes of sygus_sort_decl list * dt_cons_dec list list

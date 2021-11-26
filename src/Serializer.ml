@@ -3,6 +3,13 @@ open Sygus
 open Sexplib
 
 let sexp_of_symbol (s : symbol) : Sexp.t = Atom s
+let keyword_of_string (s : string) : string = ":" ^ s
+
+let sexp_of_attribute (a : attribute) : Sexp.t list =
+  match a with
+  | Attr s -> [ Atom (keyword_of_string s) ]
+  | AttrVal (s, v) -> [ Atom (keyword_of_string s); Atom v ]
+;;
 
 let sexp_of_index (i : index) : Sexp.t =
   match i with
@@ -72,9 +79,11 @@ let rec sexp_of_sygus_term (t : sygus_term) : Sexp.t =
 
 let sexp_of_feature (f : feature) : Sexp.t =
   match f with
-  | FGrammar -> Atom "grammars"
-  | FFwdDecls -> Atom "fwd-decls"
-  | FRecursion -> Atom "recursion"
+  | FGrammar -> Atom (keyword_of_string "grammars")
+  | FFwdDecls -> Atom (keyword_of_string "fwd-decls")
+  | FRecursion -> Atom (keyword_of_string "recursion")
+  | FOracles -> Atom (keyword_of_string "oracles")
+  | FWeights -> Atom (keyword_of_string "weights")
 ;;
 
 let sexp_of_sort_decl ((name, id) : sygus_sort_decl) : Sexp.t =
@@ -108,14 +117,25 @@ let sexp_of_grammar_def (gr : grammar_def) : Sexp.t * Sexp.t =
 let sexp_of_command (c : command) : Sexp.t =
   match c with
   | CCheckSynth -> List [ Atom "check-synth" ]
+  | CAssume t -> List [ Atom "assume"; sexp_of_sygus_term t ]
   | CConstraint t -> List [ Atom "constraint"; sexp_of_sygus_term t ]
+  | CChcConstraint (svars, t1, t2) ->
+    List
+      [ Atom "chc-constraint"
+      ; List (List.map ~f:sexp_of_sorted_var svars)
+      ; sexp_of_sygus_term t1
+      ; sexp_of_sygus_term t2
+      ]
   | CDeclareVar (name, sygus_sort) ->
     List [ Atom "declare-var"; sexp_of_symbol name; sexp_of_sygus_sort sygus_sort ]
+  | CDeclareWeight (name, attrs) ->
+    List
+      ([ Sexp.Atom "declare-weight"; sexp_of_symbol name ]
+      @ List.concat_map ~f:sexp_of_attribute attrs)
   | CInvConstraint (a, b, c, d) ->
     List [ Atom "inv-constraint"; Atom a; Atom b; Atom c; Atom d ]
   | CSetFeature (feat, boolc) ->
-    List
-      [ Atom "set-feature"; Atom ":"; sexp_of_feature feat; Atom (Bool.to_string boolc) ]
+    List [ Atom "set-feature"; sexp_of_feature feat; Atom (Bool.to_string boolc) ]
   | CSynthFun (name, args, res, body) ->
     (match body with
     | Some body ->
@@ -169,6 +189,10 @@ let sexp_of_command (c : command) : Sexp.t =
           ; List (List.map ~f:sexp_of_sorted_var args)
           ; sexp_of_sygus_sort (SId (IdSimple "Bool"))
           ])
+  | COptimizeSynth (terms, attributes) ->
+    List
+      ([ Sexp.Atom "optimize-synth"; List (List.map ~f:sexp_of_sygus_term terms) ]
+      @ List.concat_map ~f:sexp_of_attribute attributes)
   | CDeclareDataType (name, dtdecls) ->
     List
       [ Atom "declare-datatype"
@@ -195,10 +219,10 @@ let sexp_of_command (c : command) : Sexp.t =
   | CDefineSort (name, sygus_sort) ->
     List [ Atom "define-sort"; Atom name; sexp_of_sygus_sort sygus_sort ]
   | CSetInfo (sym, lit) ->
-    List [ Atom "set-info"; Atom ":"; Atom sym; sexp_of_literal lit ]
+    List [ Atom "set-info"; Atom (keyword_of_string sym); sexp_of_literal lit ]
   | CSetLogic sym -> List [ Atom "set-logic"; Atom sym ]
   | CSetOption (sym, lit) ->
-    List [ Atom "set-option"; Atom ":"; Atom sym; sexp_of_literal lit ]
+    List [ Atom "set-option"; Atom (keyword_of_string sym); sexp_of_literal lit ]
 ;;
 
 let sexp_list_of_program (p : program) : Sexp.t list = List.map ~f:sexp_of_command p

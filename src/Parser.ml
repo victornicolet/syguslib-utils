@@ -8,6 +8,42 @@ let symbol_of_sexp (s : Sexp.t) : symbol =
   | _ -> failwith (Fmt.str "%a is not a symbol" Sexp.pp_hum s)
 ;;
 
+let keyword_of_sexp (s : Sexp.t) : string option =
+  match s with
+  | Atom kw -> String.chop_prefix ~prefix:":" kw
+  | _ -> None
+;;
+
+let feature_of_sexp (s : Sexp.t) : (feature, string) Result.t =
+  match keyword_of_sexp s with
+  | Some "grammar" -> Ok FGrammar
+  | Some "fwd-decls" -> Ok FFwdDecls
+  | Some "recursion" -> Ok FRecursion
+  | Some "oracles" -> Ok FOracles
+  | Some "weights" -> Ok FWeights
+  | _ -> Error Fmt.(str "%a is not a feature" Sexp.pp_hum s)
+;;
+
+let attributes_of_sexps (sl : Sexp.t list) : (attribute list, string) Result.t =
+  let f (l, p) atom =
+    match atom with
+    | Sexp.Atom x when String.length x > 0 ->
+      (match keyword_of_sexp (Atom x) with
+      | Some attr_name ->
+        (match p with
+        | Some key -> Continue_or_stop.Continue (Attr key :: l, Some attr_name)
+        | None -> Continue (l, Some attr_name))
+      | None ->
+        (match p with
+        | Some key -> Continue (AttrVal (key, x) :: l, None)
+        | None -> Stop (Error "A lone value in a list of attributes.")))
+    | _ -> Stop (Error "Attributes can only use atoms.")
+  in
+  List.fold_until ~init:([], None) ~f sl ~finish:(function
+      | l, Some v -> Ok (List.rev (Attr v :: l))
+      | l, None -> Ok (List.rev l))
+;;
+
 let index_of_sexp (s : Sexp.t) : index =
   match s with
   | Atom s ->
@@ -87,14 +123,6 @@ and binding_of_sexp (s : Sexp.t) : binding =
   | _ -> failwith "not a binding"
 ;;
 
-let feature_of_sexp (s : Sexp.t) : feature =
-  match s with
-  | Atom "grammars" -> FGrammar
-  | Atom "fwd-decls" -> FFwdDecls
-  | Atom "recursion" -> FRecursion
-  | _ -> failwith "Not a feature."
-;;
-
 let sygus_sort_decl_of_sexp (s : Sexp.t) : sygus_sort_decl =
   match s with
   | List [ symb; Atom num ] -> symbol_of_sexp symb, Int.of_string num
@@ -151,70 +179,157 @@ let grammar_def_of_sexps (sv : Sexp.t) (gr : Sexp.t) : grammar_def =
 ;;
 
 let command_of_sexp (s : Sexp.t) : command =
-  let command_of_elts (sl : Sexp.t list) : command =
-    match sl with
-    | [ Atom single ] ->
-      (match single with
-      | "check-synth" -> CCheckSynth
-      | _ -> failwith (Fmt.str "Not a command: %a." Sexp.pp_hum s))
-    | [ Atom com_name; arg ] ->
-      (match com_name with
-      | "constraint" -> CConstraint (sygus_term_of_sexp arg)
-      | "set-logic" -> CSetLogic (symbol_of_sexp arg)
-      | _ -> failwith (Fmt.str "Not a command: %a." Sexp.pp_hum s))
-    | [ Atom "synth-inv"; name; List args ] ->
-      CSynthInv (symbol_of_sexp name, List.map ~f:sorted_var_of_sexp args, None)
-    | [ Atom "synth-fun"; name; List args; res ] ->
-      CSynthFun
-        ( symbol_of_sexp name
-        , List.map ~f:sorted_var_of_sexp args
-        , sygus_sort_of_sexp res
-        , None )
-    | [ Atom com_name; arg1; arg2 ] ->
-      (match com_name with
-      | "declare-var" -> CDeclareVar (symbol_of_sexp arg1, sygus_sort_of_sexp arg2)
-      | "declare-datatype" ->
-        CDeclareDataType (symbol_of_sexp arg1, dt_cons_dec_list_of_sexp arg2)
-      | "declare-datatypes" ->
-        (match arg2 with
-        | List args2 ->
-          let decls_l = sygus_sort_decl_list_of_sexp arg1 in
-          let dt_const = List.map ~f:dt_cons_dec_list_of_sexp args2 in
-          CDeclareDataTypes (decls_l, dt_const)
-        | _ -> failwith "Not a proper datatypes-declaration.")
-      | "declare-sort" -> CDeclareSort (symbol_of_sexp arg1, Int.t_of_sexp arg2)
-      | "define-sort" -> CDefineSort (symbol_of_sexp arg1, sygus_sort_of_sexp arg2)
-      | _ -> failwith (Fmt.str "Not a command: %a." Sexp.pp_hum s))
-    | [ Atom com_name; Atom ":"; arg1; arg2 ] ->
-      (match com_name with
-      | "set-info" -> CSetInfo (symbol_of_sexp arg1, literal_of_sexp arg2)
-      | "set-option" -> CSetOption (symbol_of_sexp arg1, literal_of_sexp arg2)
-      | "set-feature" -> CSetFeature (feature_of_sexp arg1, bool_of_sexp arg2)
-      | _ -> failwith (Fmt.str "Not a command: %a." Sexp.pp_hum s))
-    | [ Atom "define-fun"; name; List args; res; body ] ->
-      CDefineFun
-        ( symbol_of_sexp name
-        , List.map ~f:sorted_var_of_sexp args
-        , sygus_sort_of_sexp res
-        , sygus_term_of_sexp body )
-    | [ Atom "synth-inv"; name; List args; gd1; gd2 ] ->
-      CSynthInv
-        ( symbol_of_sexp name
-        , List.map ~f:sorted_var_of_sexp args
-        , Some (grammar_def_of_sexps gd1 gd2) )
-    | [ Atom "synth-fun"; name; List args; res; gd1; gd2 ] ->
-      CSynthFun
-        ( symbol_of_sexp name
-        , List.map ~f:sorted_var_of_sexp args
-        , sygus_sort_of_sexp res
-        , Some (grammar_def_of_sexps gd1 gd2) )
-    | [ Atom "inv-constraint"; a; b; c; d ] ->
-      CInvConstraint
-        (symbol_of_sexp a, symbol_of_sexp b, symbol_of_sexp c, symbol_of_sexp d)
-    | _ -> failwith (Fmt.str "Not a command: %a." Sexp.pp_hum s)
+  let command_of_elts (cn : string) (sl : Sexp.t list) : (command, string) Result.t =
+    match cn with
+    | "assume" ->
+      (match sl with
+      | [ a ] -> Ok (CAssume (sygus_term_of_sexp a))
+      | _ -> Error "assume accepts exactly one argument.")
+    | "check-synth" ->
+      (match sl with
+      | [] -> Ok CCheckSynth
+      | _ -> Error "check-synth should not have any arguments.")
+    | "chc-constraint" ->
+      (match sl with
+      | [ List svars; t1; t2 ] ->
+        Ok
+          (CChcConstraint
+             ( List.map ~f:sorted_var_of_sexp svars
+             , sygus_term_of_sexp t1
+             , sygus_term_of_sexp t2 ))
+      | _ -> Error "wrong number of arguments for chc-constraint.")
+    | "constraint" ->
+      (match sl with
+      | [ a ] -> Ok (CConstraint (sygus_term_of_sexp a))
+      | _ -> Error "constraint should have only one term as input.")
+    | "declare-var" ->
+      (match sl with
+      | [ vname; sort ] ->
+        Ok (CDeclareVar (symbol_of_sexp vname, sygus_sort_of_sexp sort))
+      | _ -> Error "declare-var should have only one symbol and one sort as arguments.")
+    | "declare-weight" ->
+      (match sl with
+      | symb :: attributes ->
+        Result.(
+          attributes_of_sexps attributes
+          >>| fun attrs -> CDeclareWeight (symbol_of_sexp symb, attrs))
+      | _ -> Error "declare-weight should have at least one argument.")
+    | "inv-constraint" ->
+      (match sl with
+      | [ Atom s1; Atom s2; Atom s3; Atom s4 ] -> Ok (CInvConstraint (s1, s2, s3, s4))
+      | _ -> Error "inv-constraint takes exactly 4 symbols as arguments.")
+    | "optimize-synth" ->
+      (match sl with
+      | List terms :: attributes ->
+        Result.(
+          attributes_of_sexps attributes
+          >>| fun attrs -> COptimizeSynth (List.map ~f:sygus_term_of_sexp terms, attrs))
+      | _ ->
+        Error
+          "optimize-synth takes a list of terms and a list of attributes as arguments.")
+    | "set-feature" ->
+      (match sl with
+      | [ Atom feature; Atom setting ] ->
+        Result.(
+          feature_of_sexp (Atom feature)
+          >>| fun fture -> CSetFeature (fture, bool_of_sexp (Atom setting)))
+      | _ -> Error "set-feature takes a feature and a boolean as arguments.")
+    | "synth-fun" ->
+      (match sl with
+      | [ name; List args; ret_sort; gd1; gd2 ] ->
+        Ok
+          (CSynthFun
+             ( symbol_of_sexp name
+             , List.map ~f:sorted_var_of_sexp args
+             , sygus_sort_of_sexp ret_sort
+             , Some (grammar_def_of_sexps gd1 gd2) ))
+      | [ name; List args; ret_sort ] ->
+        Ok
+          (CSynthFun
+             ( symbol_of_sexp name
+             , List.map ~f:sorted_var_of_sexp args
+             , sygus_sort_of_sexp ret_sort
+             , None ))
+      | _ ->
+        Error
+          "synth-fun takes as arguments a function name, variables with sorts a return \
+           sort and an optional grammar")
+    | "declare-datatype" ->
+      (match sl with
+      | [ a; b ] -> Ok (CDeclareDataType (symbol_of_sexp a, dt_cons_dec_list_of_sexp b))
+      | _ ->
+        Error "declare-datatypes takes a symbol and a list of constructors as arguments")
+    | "declare-datatypes" ->
+      (match sl with
+      | [ a; List b ] ->
+        Ok
+          (CDeclareDataTypes
+             (sygus_sort_decl_list_of_sexp a, List.map ~f:dt_cons_dec_list_of_sexp b))
+      | _ ->
+        Error "declare-datatypes takes a symbol and a list of constructors as arguments")
+    | "declare-sort" ->
+      (match sl with
+      | [ s; n ] -> Ok (CDeclareSort (symbol_of_sexp s, Int.t_of_sexp n))
+      | _ -> Error "A sort declaration with declare-sort takes a name and an index.")
+    | "define-fun" ->
+      (match sl with
+      | [ name; List args; ret_sort; body ] ->
+        Ok
+          (CDefineFun
+             ( symbol_of_sexp name
+             , List.map ~f:sorted_var_of_sexp args
+             , sygus_sort_of_sexp ret_sort
+             , sygus_term_of_sexp body ))
+      | _ -> Error "")
+    | "define-sort" ->
+      (match sl with
+      | [ name; sort ] -> Ok (CDefineSort (symbol_of_sexp name, sygus_sort_of_sexp sort))
+      | _ -> Error "define-sort takes a name and a sort as arguments.")
+    | "set-info" ->
+      (match sl with
+      | [ kw; lit ] ->
+        Result.of_option
+          ~error:"Bad keyword"
+          Option.(keyword_of_sexp kw >>| fun keyw -> CSetInfo (keyw, literal_of_sexp lit))
+      | _ -> Error "set-info takes a keyword and a literal as arguments.")
+    | "set-logic" ->
+      (match sl with
+      | [ lname ] -> Ok (CSetLogic (symbol_of_sexp lname))
+      | _ -> Error "set-logic only takes a logic name as argument.")
+    | "set-option" ->
+      (match sl with
+      | [ kw; lit ] ->
+        Result.of_option
+          ~error:"Bad keyword"
+          Option.(
+            keyword_of_sexp kw >>| fun keyw -> CSetOption (keyw, literal_of_sexp lit))
+      | _ -> Error "set-option takes a keyword and a literal as arguments.")
+    | "oracle-assume" -> Error "Oracle command oracle-assume is not supported yet."
+    | "oracle-constraint" ->
+      Error "Oracle command oracle-constraint is not supported yet."
+    | "declare-oracle-fun" ->
+      Error "Oracle command declare-oracle-fun is not supported yet."
+    | "oracle-constraint-io" ->
+      Error "Oracle command oracle-constraint-io is not supported yet."
+    | "oracle-constraint-cex" ->
+      Error "Oracle command oracle-constraint-cex is not supported yet."
+    | "oracle-constraint-membership" ->
+      Error "Oracle command oracle-constraint-membership is not supported yet."
+    | "oracle-constraint-poswitness" ->
+      Error "Oracle command oracle-constraint-poswitness is not supported yet."
+    | "oracle-constraint-negwitness" ->
+      Error "Oracle command oracle-constraint-negwitness is not supported yet."
+    | "declare-correctness-oracle" ->
+      Error "Oracle command declare-correctness-oracle is not supported yet."
+    | "declare-correctness-cex-oracle" ->
+      Error "Oracle command declare-correctness-cex-oracle is not supported yet."
+    | _ -> Error "I do not know this command"
   in
   match s with
-  | List elts -> command_of_elts elts
+  | List (Atom command_name :: elts) ->
+    (match command_of_elts command_name elts with
+    | Ok c -> c
+    | Error msg -> failwith Fmt.(str "%a : %s" Sexp.pp s msg))
   | _ -> failwith (Fmt.str "Not a command: %a." Sexp.pp_hum s)
 ;;
 
