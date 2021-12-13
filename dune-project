@@ -1,4 +1,4 @@
-(lang dune 2.9)
+(lang dune 2.9.1)
 
 (name syguslib-utils)
 
@@ -18,11 +18,11 @@
 
 (package
  (name syguslib-utils)
- (synopsis "SyGuS Lib parser and utils.")
+ (synopsis "SyGuS Lib parser and utils")
  (description
   "SyGuS Language Standard v2.1 parser with utils for using SyGuS solvers.")
  (depends
-  (core
+  (base
    (>= v0.14.0))
   (fileutils
    (>= 0.6.3))
@@ -41,4 +41,7 @@
   (stdio
    (>= v0.14.0))
   (sexplib
+   (>= v0.14.0))
+  ; for tests
+  (core
    (>= v0.14.0))))

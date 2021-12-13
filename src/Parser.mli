@@ -1,6 +1,7 @@
 (** This module defines function to convert from s-expressions to sygus.
 *)
 
+open Base
 open Sexplib
 open Sygus
 
