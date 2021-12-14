@@ -1,4 +1,4 @@
-(lang dune 2.9.1)
+(lang dune 2.9)
 
 (name syguslib-utils)
 
@@ -14,6 +14,9 @@
 
 (bug_reports "https://github.com/victornicolet/sygusllib-utils/issues")
 
+(source
+ (github victornicolet/syguslib-utils))
+
 (generate_opam_files true)
 
 (package
@@ -25,17 +28,17 @@
   (base
    (>= v0.14.0))
   (fileutils
-   (>= 0.6.3))
+   (>= 0.6))
   (fmt
-   (>= 0.8.8))
+   (>= 0.8))
   (getopt
    (>= 20120615))
   (lwt
    (>= 5.4.0))
   (lwt_ppx
-   (>= 2.0.0))
+   (>= 2.0))
   (odoc
-   (>= 1.5.0))
+   (>= 1.5))
   (parsexp
    (>= v0.14.0))
   (stdio
