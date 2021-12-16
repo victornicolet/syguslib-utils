@@ -19,9 +19,8 @@ depends: [
   "lwt_ppx" {>= "2.0"}
   "odoc" {>= "1.5"}
   "parsexp" {>= "v0.14.0"}
+  "parsexp_io" {>= "v0.14.0"}
   "stdio" {>= "v0.14.0"}
-  "sexplib" {>= "v0.14.0"}
-  "core" {>= "v0.14.0"}
 ]
 build: [
   ["dune" "subst"] {dev}

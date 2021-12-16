@@ -41,10 +41,7 @@
    (>= 1.5))
   (parsexp
    (>= v0.14.0))
+  (parsexp_io
+   (>= v0.14.0))
   (stdio
-   (>= v0.14.0))
-  (sexplib
-   (>= v0.14.0))
-  ; for tests
-  (core
    (>= v0.14.0))))

@@ -1,4 +1,4 @@
-open Core
+open Base
 open Sexplib
 open Syguslib
 
@@ -6,7 +6,7 @@ let bench_positive_home = "../../../test/inputs/positive"
 let bench_negative_home = "../../../test/inputs/negative"
 
 let pos_parse_test filename =
-  let filename = Filename.concat bench_positive_home filename in
+  let filename = Caml.Filename.concat bench_positive_home filename in
   Fmt.(pf stdout "TEST: %s@." filename);
   let sexps = Sexp.input_sexps (Stdio.In_channel.create filename) in
   try
@@ -19,7 +19,7 @@ let pos_parse_test filename =
 ;;
 
 let neg_parse_test filename =
-  let filename = Filename.concat bench_negative_home filename in
+  let filename = Caml.Filename.concat bench_negative_home filename in
   Fmt.(pf stdout "TEST: %s@." filename);
   let sexps = Sexp.input_sexps (Stdio.In_channel.create filename) in
   try
@@ -33,11 +33,11 @@ let neg_parse_test filename =
 ;;
 
 let benchfiles_pos =
-  Array.filter ~f:Sygus.has_standard_extension (Sys.readdir bench_positive_home)
+  Array.filter ~f:Sygus.has_standard_extension (Caml.Sys.readdir bench_positive_home)
 ;;
 
 let benchfiles_neg =
-  Array.filter ~f:Sygus.has_standard_extension (Sys.readdir bench_negative_home)
+  Array.filter ~f:Sygus.has_standard_extension (Caml.Sys.readdir bench_negative_home)
 (* dune test runs in _build/default/test.  *)
 ;;
 

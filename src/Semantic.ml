@@ -2,7 +2,6 @@ open Base
 open Sygus
 open Parser
 open Serializer
-open Sexplib
 
 (* ============================================================================================= *)
 (*                                      WRAPPER MODULES                                          *)
@@ -116,12 +115,14 @@ let compare_declares (c1 : command) (c2 : command) =
 
 let max_definition =
   Command.of_sexp
-    (Sexp.of_string "(define-fun max ((x Int) (y Int)) Int (ite (>= x y) x y))")
+    (Parsexp.Single.parse_string_exn
+       "(define-fun max ((x Int) (y Int)) Int (ite (>= x y) x y))")
 ;;
 
 let min_definition =
   Command.of_sexp
-    (Sexp.of_string "(define-fun min ((x Int) (y Int)) Int (ite (<= x y) x y))")
+    (Parsexp.Single.parse_string_exn
+       "(define-fun min ((x Int) (y Int)) Int (ite (<= x y) x y))")
 ;;
 
 (* ============================================================================================= *)

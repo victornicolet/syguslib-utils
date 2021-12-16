@@ -2,7 +2,6 @@
 *)
 
 open Base
-open Sexplib
 open Sygus
 
 (** An exception raised during the s-expression based parsing method.
@@ -44,7 +43,7 @@ val program_of_sexp_list : Sexp.t list -> program
 (**
       Translate a s-expression returned by a solver to a {!type:Sygus.solver_response}.
   *)
-val reponse_of_sexps : Sexp.t list -> solver_response
+val response_of_sexps : Sexp.t list -> solver_response
 
 (** {1 Useful auxiliary functions.}  *)
 

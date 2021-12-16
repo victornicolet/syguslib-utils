@@ -2,7 +2,6 @@ open Base
 open Sygus
 open Parser
 open Semantic
-open Sexplib
 open Lwt_process
 module OC = Stdio.Out_channel
 module IC = Stdio.In_channel
@@ -114,9 +113,11 @@ struct
 
   let fetch_solution pid filename =
     Log.debug Fmt.(fun fmt () -> pf fmt "Fetching solution in %a" pp_link filename);
-    let r = reponse_of_sexps (Sexp.input_sexps (Stdio.In_channel.create filename)) in
-    Stats.log_proc_quit pid;
-    r
+    match Parsexp_io.load (module Parsexp.Many) ~filename with
+    | Ok sexps ->
+      Stats.log_proc_quit pid;
+      response_of_sexps sexps
+    | Error _ -> RFail
   ;;
 
   let solver_make_cancellable (s : solver_instance) (p : 'a Lwt.t) : unit =

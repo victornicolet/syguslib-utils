@@ -1,5 +1,4 @@
 open Base
-open Sexplib
 open Sygus
 
 exception ParseError of Sexp.t * string
@@ -465,7 +464,7 @@ let program_of_sexp_list (sexps : Sexp.t list) : program =
   List.map ~f:command_of_sexp sexps
 ;;
 
-let reponse_of_sexps (s : Sexp.t list) : solver_response =
+let response_of_sexps (s : Sexp.t list) : solver_response =
   let atomic_response (s : Sexp.t list) =
     match s with
     | [ Atom "fail" ] -> Some RFail
@@ -503,5 +502,9 @@ let reponse_of_sexps (s : Sexp.t list) : solver_response =
 ;;
 
 let sexp_parse (filename : string) =
-  program_of_sexp_list (Sexp.input_sexps (Stdio.In_channel.create filename))
+  match Parsexp_io.load (module Parsexp.Many_and_positions) ~filename with
+  | Ok (sexp_list, _positions) -> program_of_sexp_list sexp_list
+  | Error parse_error ->
+    Parsexp.Parse_error.report Fmt.stderr ~filename parse_error;
+    failwith "Failed to parse file."
 ;;

@@ -1,6 +1,5 @@
 open Base
 open Sygus
-open Sexplib
 
 let sexp_of_symbol (s : symbol) : Sexp.t = Atom s
 let keyword_of_string (s : string) : string = ":" ^ s
