@@ -1,5 +1,4 @@
 open Base
-open Sexplib
 open Syguslib
 
 let bench_positive_home = "../../../test/inputs/positive"
@@ -8,9 +7,8 @@ let bench_negative_home = "../../../test/inputs/negative"
 let pos_parse_test filename =
   let filename = Caml.Filename.concat bench_positive_home filename in
   Fmt.(pf stdout "TEST: %s@." filename);
-  let sexps = Sexp.input_sexps (Stdio.In_channel.create filename) in
+  let parsed = Parser.sexp_parse filename in
   try
-    let parsed = Parser.program_of_sexp_list sexps in
     if Semantic.is_well_formed parsed
     then ()
     else failwith (Fmt.str "%s is not well formed" filename)
@@ -21,9 +19,8 @@ let pos_parse_test filename =
 let neg_parse_test filename =
   let filename = Caml.Filename.concat bench_negative_home filename in
   Fmt.(pf stdout "TEST: %s@." filename);
-  let sexps = Sexp.input_sexps (Stdio.In_channel.create filename) in
   try
-    let parsed = Parser.program_of_sexp_list sexps in
+    let parsed = Parser.sexp_parse filename in
     if Semantic.is_well_formed parsed
     then failwith (Fmt.str "%s parsed succesfully, it should not be." filename)
     else ()

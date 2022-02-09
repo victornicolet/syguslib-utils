@@ -116,7 +116,7 @@ struct
     match Parsexp_io.load (module Parsexp.Many) ~filename with
     | Ok sexps ->
       Stats.log_proc_quit pid;
-      response_of_sexps sexps
+      response_of_asexps (List.map ~f:Annot.of_sexp sexps)
     | Error _ -> RFail
   ;;
 
