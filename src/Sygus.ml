@@ -187,6 +187,15 @@ let mk_lit_hex ?(loc = dummy_loc) (s : string) = LitHex (loc, s)
 let mk_lit_bin ?(loc = dummy_loc) (bits : bool list) = LitBin (loc, bits)
 let mk_lit_string ?(loc = dummy_loc) (s : string) = LitString (loc, s)
 
+(* Shortcuts for terms *)
+
+let mk_num ?(loc = dummy_loc) (i : int) = SyLit (loc, LitNum (loc, i))
+let mk_dec ?(loc = dummy_loc) (f : float) = SyLit (loc, LitDec (loc, f))
+let mk_bool ?(loc = dummy_loc) (b : bool) = SyLit (loc, LitBool (loc, b))
+let mk_hex ?(loc = dummy_loc) (h : string) = SyLit (loc, LitHex (loc, h))
+let mk_bin ?(loc = dummy_loc) (b : bool list) = SyLit (loc, LitBin (loc, b))
+let mk_string ?(loc = dummy_loc) (s : string) = SyLit (loc, LitString (loc, s))
+
 (* Index *)
 
 let mk_index_num ?(loc = dummy_loc) (i : int) = INum (loc, i)
@@ -210,6 +219,7 @@ let mk_sort_app ?(loc = dummy_loc) (i : identifier) (args : sygus_sort list) =
 
 (* Terms *)
 let mk_t_id ?(loc = dummy_loc) (i : identifier) = SyId (loc, i)
+let mk_simple_id ?(loc = dummy_loc) (s : symbol) = SyId (loc, IdSimple (loc, s))
 let mk_t_lit ?(loc = dummy_loc) (l : literal) = SyLit (loc, l)
 
 let mk_t_app ?(loc = dummy_loc) (f : identifier) (args : sygus_term list) =

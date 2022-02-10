@@ -82,16 +82,30 @@ module SygusSolver : functor
   val sname : t -> string
   val print_options : Format.formatter -> string list -> unit
   val fetch_solution : int -> string -> Sygus.solver_response
+end
+
+module LwtSolver : functor
+  (Stats : Statistics)
+  (Log : Logger)
+  (Config : SolverSystemConfig)
+  -> sig
+  module CoreSolver : sig
+    type t = SygusSolver(Stats)(Log)(Config).t =
+      | CVC
+      | DryadSynth
+      | EUSolver
+  end
+
   val solver_make_cancellable : solver_instance -> 'a Lwt.t -> unit
 
   val exec_solver
-    :  ?solver_kind:t
+    :  ?solver_kind:CoreSolver.t
     -> ?options:string list
     -> string * string
     -> solver_instance * Sygus.solver_response option Lwt.t * int Lwt.u
 
   val solve_commands
-    :  ?solver_kind:t
+    :  ?solver_kind:CoreSolver.t
     -> Sygus.program
     -> Sygus.solver_response option Lwt.t * int Lwt.u
 end

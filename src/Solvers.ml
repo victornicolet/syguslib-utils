@@ -119,6 +119,11 @@ struct
       response_of_asexps (List.map ~f:Annot.of_sexp sexps)
     | Error _ -> RFail
   ;;
+end
+
+module LwtSolver (Stats : Statistics) (Log : Logger) (Config : SolverSystemConfig) =
+struct
+  module CoreSolver = SygusSolver (Stats) (Log) (Config)
 
   let solver_make_cancellable (s : solver_instance) (p : 'a Lwt.t) : unit =
     (* IF task is cancelled, kill the solver.  *)
@@ -141,21 +146,21 @@ struct
   ;;
 
   let exec_solver
-      ?(solver_kind = !default_solver)
+      ?(solver_kind = !CoreSolver.default_solver)
       ?(options = [])
       ((inputfile, outputfile) : string * string)
       : solver_instance * solver_response option Lwt.t * int Lwt.u
     =
     let command =
-      ( binary_path solver_kind
-      , Array.of_list (executable_name solver_kind :: inputfile :: options) )
+      ( CoreSolver.binary_path solver_kind
+      , Array.of_list (CoreSolver.executable_name solver_kind :: inputfile :: options) )
     in
     let out_fd =
       Unix.openfile outputfile [ Unix.O_RDWR; Unix.O_TRUNC; Unix.O_CREAT ] 0o644
     in
     let process = open_process_out ~stdout:(`FD_move out_fd) command in
     let solver =
-      { s_name = sname solver_kind
+      { s_name = CoreSolver.sname solver_kind
       ; s_pid = process#pid
       ; s_output_file = outputfile
       ; s_input_file = inputfile
@@ -181,7 +186,8 @@ struct
       , Lwt.bind t (fun _ ->
             let* status = process#status in
             match status with
-            | Unix.WEXITED 0 -> Lwt.return (Some (fetch_solution solver.s_pid outputfile))
+            | Unix.WEXITED 0 ->
+              Lwt.return (Some (CoreSolver.fetch_solution solver.s_pid outputfile))
             | Unix.WEXITED i ->
               Log.error
                 Fmt.(
@@ -205,7 +211,7 @@ struct
       failwith ("couldn't talk to solver, double-check path. Sys_error " ^ s)
   ;;
 
-  let solve_commands ?(solver_kind = !default_solver) (p : program)
+  let solve_commands ?(solver_kind = !CoreSolver.default_solver) (p : program)
       : solver_response option Lwt.t * int Lwt.u
     =
     let inputfile = mk_tmp_sl "in_" in

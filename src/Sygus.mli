@@ -200,6 +200,24 @@ val mk_lit_bin : ?loc:location -> bool list -> literal
 (** Build a string literal. *)
 val mk_lit_string : ?loc:location -> string -> literal
 
+(** Build a term containing a numeral literal.  *)
+val mk_num : ?loc:location -> int -> sygus_term
+
+(** Build a term containing a decimal literal.  *)
+val mk_dec : ?loc:location -> float -> sygus_term
+
+(** Build a term containing a boolean literal.  *)
+val mk_bool : ?loc:location -> bool -> sygus_term
+
+(** Build a term containing a hexadecimal literal.  *)
+val mk_hex : ?loc:location -> string -> sygus_term
+
+(** Build a term containing a binary literal.  *)
+val mk_bin : ?loc:location -> bool list -> sygus_term
+
+(** Build a term containing a string literal.  *)
+val mk_string : ?loc:location -> string -> sygus_term
+
 (** Build a concrete numeral index.  *)
 val mk_index_num : ?loc:location -> int -> index
 
@@ -223,6 +241,9 @@ val mk_sort_app : ?loc:location -> identifier -> sygus_sort list -> sygus_sort
 
 (** Build a term from an identifier. *)
 val mk_t_id : ?loc:location -> identifier -> sygus_term
+
+(** Build a term that contains a simple id.  *)
+val mk_simple_id : ?loc:location -> symbol -> sygus_term
 
 (** Build a term from a literal.  *)
 val mk_t_lit : ?loc:location -> literal -> sygus_term
