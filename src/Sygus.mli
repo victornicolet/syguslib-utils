@@ -348,3 +348,50 @@ val is_failed : solver_response -> bool
 
 (** Returns true if the solver response indicates the problem is is infeasible *)
 val is_infeasible : solver_response -> bool
+
+(** Convenience module for writing expressions within predefined theories.  *)
+module E : sig
+  (* Terminals *)
+  val var : symbol -> sygus_term
+  val sort : symbol -> sygus_sort
+  val int : int -> sygus_term
+
+  (* If-then-else *)
+  val ite : sygus_term -> sygus_term -> sygus_term -> sygus_term
+
+  (* Arithmetic *)
+  val ( / ) : sygus_term -> sygus_term -> sygus_term
+  val ( + ) : sygus_term -> sygus_term -> sygus_term
+  val ( - ) : sygus_term -> sygus_term -> sygus_term
+  val ( * ) : sygus_term -> sygus_term -> sygus_term
+  val max : sygus_term -> sygus_term -> sygus_term
+  val min : sygus_term -> sygus_term -> sygus_term
+  val modulo : sygus_term -> sygus_term -> sygus_term
+  val abs : sygus_term -> sygus_term
+  val neg : sygus_term -> sygus_term
+
+  (* Bool *)
+  val mk_false : sygus_term
+  val mk_true : sygus_term
+  val ( && ) : sygus_term -> sygus_term -> sygus_term
+  val ( || ) : sygus_term -> sygus_term -> sygus_term
+  val not : sygus_term -> sygus_term
+
+  (* Comparisons *)
+  val ( > ) : sygus_term -> sygus_term -> sygus_term
+  val ( >= ) : sygus_term -> sygus_term -> sygus_term
+  val ( < ) : sygus_term -> sygus_term -> sygus_term
+  val ( <= ) : sygus_term -> sygus_term -> sygus_term
+  val ( = ) : sygus_term -> sygus_term -> sygus_term
+
+  (* Grmmar *)
+  val gconst : sygus_sort -> sygus_gsterm
+  val gterm : sygus_term -> sygus_gsterm
+  val gvar : sygus_sort -> sygus_gsterm
+  val gblock : string -> sygus_sort -> sygus_gsterm list -> grammar_def
+
+  (* Predefined Sorts *)
+  val int_sort : sygus_sort
+  val bool_sort : sygus_sort
+  val real_sort : sygus_sort
+end
