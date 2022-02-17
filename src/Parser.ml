@@ -637,7 +637,10 @@ let response_of_asexps (s : Annot.t list) : solver_response =
              | Annot.{ sexp = AAtom "unsat"; _ } ->
                None (* Ignore 'unsat' printed by CVC4. *)
              | { sexp = AList l; _ } as cmd ->
-               (match one_command cmd with
+               (match
+                  try one_command cmd with
+                  | _ -> None
+                with
                (* A response composed of a single command. *)
                | Some s -> Some s
                | None ->
