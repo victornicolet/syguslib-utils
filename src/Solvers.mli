@@ -96,6 +96,8 @@ module LwtSolver : functor
       | CVC
       | DryadSynth
       | EUSolver
+
+    val default_solver : t ref
   end
 
   val solver_make_cancellable : solver_instance -> 'a Lwt.t -> unit
@@ -124,6 +126,8 @@ module SyncSolver : functor
       | CVC
       | DryadSynth
       | EUSolver
+
+    val default_solver : t ref
   end
 
   (** Kill a solver, given its process id. Ignores errors.  *)
