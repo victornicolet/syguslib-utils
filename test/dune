@@ -1,3 +1,3 @@
 (tests
  (names Basic Solve)
- (libraries fileutils core sexplib syguslib))
+ (libraries fileutils core sexplib syguslib domainslib))

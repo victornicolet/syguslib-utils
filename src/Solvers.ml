@@ -222,3 +222,93 @@ struct
     t, r
   ;;
 end
+
+module SyncSolver (Stats : Statistics) (Log : Logger) (Config : SolverSystemConfig) =
+struct
+  module CoreSolver = SygusSolver (Stats) (Log) (Config)
+
+  let kill_solver (pid : int) =
+    try Unix.kill pid Caml.Sys.sigkill with
+    | _ -> ()
+  ;;
+
+  let exec_solver
+      ?(solver_kind = !CoreSolver.default_solver)
+      ?(options = [])
+      ?(pid = ref 0)
+      ?(error_log = None)
+      ((inputfile, outputfile) : string * string)
+      : solver_response
+    =
+    let command_exec = CoreSolver.binary_path solver_kind in
+    let command_args =
+      Array.of_list (CoreSolver.executable_name solver_kind :: inputfile :: options)
+    in
+    let out_fd =
+      Unix.openfile outputfile [ Unix.O_RDWR; Unix.O_TRUNC; Unix.O_CREAT ] 0o644
+    in
+    let err_fd =
+      match error_log with
+      | Some error_file ->
+        Unix.openfile error_file [ Unix.O_RDWR; Unix.O_TRUNC; Unix.O_CREAT ] 0o644
+      | None -> Unix.descr_of_out_channel Stdlib.stderr
+    in
+    (* Start the process. *)
+    let () =
+      let proc_id =
+        Unix.create_process
+          command_exec
+          command_args
+          (Unix.descr_of_in_channel Stdlib.stdin)
+          out_fd
+          err_fd
+      in
+      pid := proc_id
+    in
+    let solver_name = CoreSolver.sname solver_kind in
+    Stats.log_solver_start !pid solver_name;
+    Log.debug
+      Fmt.(
+        fun fmt () ->
+          pf
+            fmt
+            "%s (pid : %i) solving %a -> %a"
+            solver_name
+            !pid
+            pp_link
+            inputfile
+            pp_link
+            outputfile);
+    (* Block and wait for it to terminate. *)
+    let sub_pid, proc_status = Unix.wait () in
+    if sub_pid = !pid
+    then (
+      match proc_status with
+      | Unix.WEXITED 0 -> CoreSolver.fetch_solution !pid outputfile
+      | Unix.WEXITED i ->
+        Log.error
+          Fmt.(
+            fun fmt () ->
+              pf fmt "Solver %s (pid : %i) exited with code %i." solver_name !pid i);
+        RFail
+      | Unix.WSIGNALED i ->
+        Log.error Fmt.(fun fmt () -> pf fmt "Solver signaled with code %i." i);
+        RFail
+      | Unix.WSTOPPED i ->
+        Log.error Fmt.(fun fmt () -> pf fmt "Solver stopped with code %i." i);
+        RFail)
+    else RFail
+  ;;
+
+  let solve_commands
+      ?(solver_kind = !CoreSolver.default_solver)
+      ?(pid = ref 0)
+      (p : program)
+      : solver_response
+    =
+    let inputfile = mk_tmp_sl "in_" in
+    let outputfile = mk_tmp_sl "out_" in
+    commands_to_file p inputfile;
+    exec_solver ~solver_kind ~pid (inputfile, outputfile)
+  ;;
+end
