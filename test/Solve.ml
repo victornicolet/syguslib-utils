@@ -52,34 +52,3 @@ let test_sync_solver input_file =
 test_sync_solver "../../../test/inputs/positive/alist_sum.sl";
 test_sync_solver "../../../test/inputs/positive/bench_msshom2b1774.sl";
 test_sync_solver "../../../test/inputs/positive/bench_msshom931e5a.sl"
-
-(* Test the solver on an unrealizable benchmark and kill it after 1s *)
-module T = Domainslib.Task
-module C = Domainslib.Chan
-
-let wait_and_kill pid =
-  Unix.sleep 1;
-  SSolver.kill_solver !pid
-;;
-
-let test_sync_solver_with_kill input_file =
-  Fmt.(pf stdout "SOLVE TEST %s ..@." input_file);
-  let future_pid = ref (-2) in
-  let program = Parser.sexp_parse input_file in
-  let pool = T.setup_pool ~num_additional_domains:1 () in
-  let resp =
-    T.run pool (fun () ->
-        let d1 =
-          T.async pool (fun () ->
-              SSolver.solve_commands ~pid:future_pid ~solver_kind:CVC program)
-        in
-        wait_and_kill future_pid;
-        T.await pool d1)
-  in
-  match resp with
-  | RFail -> Fmt.(pf stdout "OK@.")
-  | _ -> Fmt.(pf stdout "FAILED@.")
-;;
-
-test_sync_solver_with_kill
-  "../../../test/inputs/positive/bench_unrealizable_count_lt4bf069.sl"
