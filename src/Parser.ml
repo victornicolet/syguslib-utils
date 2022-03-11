@@ -605,7 +605,7 @@ let command_of_asexp (s : Annot.t) : command =
     | Error (loc, msg) ->
       raise_parse_error
         s
-        Fmt.(str "%s@;@[at location %a while parsing a command)@}" msg pp_loc loc))
+        Fmt.(str "%s@;@[(at location %a while parsing a command)@}" msg pp_loc loc))
   | _ -> raise_parse_error s "A command should start with a name."
 ;;
 
