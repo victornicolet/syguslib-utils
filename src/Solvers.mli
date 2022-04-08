@@ -82,16 +82,78 @@ module SygusSolver : functor
   val sname : t -> string
   val print_options : Format.formatter -> string list -> unit
   val fetch_solution : int -> string -> Sygus.solver_response
+end
+
+(** A module encapsulating function to execute SyGuS solvers asynchronously using Lwt.
+  *)
+module LwtSolver : functor
+  (Stats : Statistics)
+  (Log : Logger)
+  (Config : SolverSystemConfig)
+  -> sig
+  module CoreSolver : sig
+    type t = SygusSolver(Stats)(Log)(Config).t =
+      | CVC
+      | DryadSynth
+      | EUSolver
+
+    val default_solver : t ref
+  end
+
   val solver_make_cancellable : solver_instance -> 'a Lwt.t -> unit
 
   val exec_solver
-    :  ?solver_kind:t
+    :  ?solver_kind:CoreSolver.t
     -> ?options:string list
     -> string * string
     -> solver_instance * Sygus.solver_response option Lwt.t * int Lwt.u
 
   val solve_commands
-    :  ?solver_kind:t
+    :  ?solver_kind:CoreSolver.t
     -> Sygus.program
     -> Sygus.solver_response option Lwt.t * int Lwt.u
+end
+
+(** A module encapsulating function to execute SyGuS solvers synchronously.
+  *)
+module SyncSolver : functor
+  (Stats : Statistics)
+  (Log : Logger)
+  (Config : SolverSystemConfig)
+  -> sig
+  module CoreSolver : sig
+    type t = SygusSolver(Stats)(Log)(Config).t =
+      | CVC
+      | DryadSynth
+      | EUSolver
+
+    val default_solver : t ref
+  end
+
+  (** Kill a solver, given its process id. Ignores errors.  *)
+  val kill_solver : int -> unit
+
+  (** Execute a solver on a given sygus set of commands. [exec_solver ~solver_kind ~options ~pid
+      ~error_log (inputfile, outputfile)] executes the solver [~solver_kind] (defaults to CVC) with
+      options [~options] and stores the process id of the solver process in [~pid] as soon as the
+      process is started. The solver is executed by printing the commands in [inputfile] and
+      outputting the solver response in [outputfile].
+  *)
+  val exec_solver
+    :  ?solver_kind:CoreSolver.t
+    -> ?options:string list
+    -> ?pid:int ref
+    -> ?error_log:string option
+    -> string * string
+    -> Sygus.solver_response
+
+  (** [solve_commands ~solver_kind ~pid program] solvers the set of commands in [program] using the
+    solver [solver_kind] (default to CVC) and stores the process id of the solver in [pid]. The user
+    can use [pid] as a handle to kill the process if necessary.
+  *)
+  val solve_commands
+    :  ?solver_kind:CoreSolver.t
+    -> ?pid:int ref
+    -> Sygus.program
+    -> Sygus.solver_response
 end

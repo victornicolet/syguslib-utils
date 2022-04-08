@@ -3,7 +3,7 @@
 *)
 
 open Sygus
-open Sexplib
+open Base
 
 (** {1 Semantic identity of commands} *)
 
@@ -40,7 +40,7 @@ val rename : (string * string) list -> Sygus.sygus_term -> Sygus.sygus_term
 (** {1 I/O functions} *)
 
 (** Writes a command to an output channel.  *)
-val write_command : out_channel -> Sygus.command -> unit
+val write_command : Stdio.Out_channel.t -> Sygus.command -> unit
 
 (** {1 Wrapper modules for important types} *)
 
@@ -49,8 +49,8 @@ module Command : sig
 
   val of_sexp : Sexp.t -> t
   val sexp_of : t -> Sexp.t
-  val pp : Format.formatter -> t -> unit
-  val pp_hum : Format.formatter -> t -> unit
+  val pp : Formatter.t -> t -> unit
+  val pp_hum : Formatter.t -> t -> unit
 end
 
 module Term : sig
@@ -58,8 +58,8 @@ module Term : sig
 
   val of_sexp : Sexp.t -> t
   val sexp_of : t -> Sexp.t
-  val pp : Format.formatter -> t -> unit
-  val pp_hum : Format.formatter -> t -> unit
+  val pp : Formatter.t -> t -> unit
+  val pp_hum : Formatter.t -> t -> unit
 end
 
 module Ident : sig
@@ -67,8 +67,8 @@ module Ident : sig
 
   val of_sexp : Sexp.t -> t
   val sexp_of : t -> Sexp.t
-  val pp : Format.formatter -> t -> unit
-  val pp_hum : Format.formatter -> t -> unit
+  val pp : Formatter.t -> t -> unit
+  val pp_hum : Formatter.t -> t -> unit
 end
 
 module Lit : sig
@@ -76,8 +76,8 @@ module Lit : sig
 
   val of_sexp : Sexp.t -> t
   val sexp_of : t -> Sexp.t
-  val pp : Format.formatter -> t -> unit
-  val pp_hum : Format.formatter -> t -> unit
+  val pp : Formatter.t -> t -> unit
+  val pp_hum : Formatter.t -> t -> unit
 end
 
 module Sort : sig
@@ -85,6 +85,6 @@ module Sort : sig
 
   val of_sexp : Sexp.t -> t
   val sexp_of : t -> Sexp.t
-  val pp : Format.formatter -> t -> unit
-  val pp_hum : Format.formatter -> t -> unit
+  val pp : Formatter.t -> t -> unit
+  val pp_hum : Formatter.t -> t -> unit
 end

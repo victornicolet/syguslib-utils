@@ -1,4 +1,4 @@
 (library
  (name syguslib)
  (public_name syguslib-utils)
- (libraries fmt base stdio sexplib lwt lwt.unix))
+ (libraries fmt base stdio parsexp parsexp_io lwt lwt.unix))

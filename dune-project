@@ -2,7 +2,7 @@
 
 (name syguslib-utils)
 
-(version 0.1)
+(version 0.2.1)
 
 (license MIT)
 
@@ -39,9 +39,7 @@
    (>= 1.5))
   (parsexp
    (>= v0.14.0))
-  (stdio
-   (>= v0.14.0))
-  (sexplib
+  (parsexp_io
    (>= v0.14.0))
   ; for tests
   (core
@@ -49,4 +47,6 @@
   (core_unix
    (and
     (>= 0.14.0)
-    (< v0.15.0)))))
+    (< v0.15.0)))
+  (stdio
+   (>= v0.14.0))))
