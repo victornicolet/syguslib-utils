@@ -27,8 +27,6 @@
  (depends
   (base
    (>= v0.14.0))
-  (fileutils
-   (>= 0.6))
   (fmt
    (>= 0.8))
   (getopt
@@ -47,4 +45,8 @@
    (>= v0.14.0))
   ; for tests
   (core
-   (>= v0.14.0))))
+   (>= v0.14.0))
+  (core_unix
+   (and
+    (>= 0.14.0)
+    (< v0.15.0)))))
