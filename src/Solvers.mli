@@ -103,13 +103,15 @@ module LwtSolver : functor
   val solver_make_cancellable : solver_instance -> 'a Lwt.t -> unit
 
   val exec_solver
-    :  ?solver_kind:CoreSolver.t
+    :  ?timeout:float option
+    -> ?solver_kind:CoreSolver.t
     -> ?options:string list
     -> string * string
     -> solver_instance * Sygus.solver_response option Lwt.t * int Lwt.u
 
   val solve_commands
-    :  ?solver_kind:CoreSolver.t
+    :  ?timeout:float option
+    -> ?solver_kind:CoreSolver.t
     -> Sygus.program
     -> Sygus.solver_response option Lwt.t * int Lwt.u
 end
