@@ -20,7 +20,7 @@ depends: [
   "parsexp" {>= "v0.14.0"}
   "parsexp_io" {>= "v0.14.0"}
   "core" {>= "v0.14.0"}
-  "core_unix" {>= "0.14.0" & < "v0.15.0"}
+  "core_unix" {>= "0.14.0"}
   "stdio" {>= "v0.14.0"}
 ]
 build: [
