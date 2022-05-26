@@ -134,20 +134,6 @@ let index_of_asexp (s : Annot.t) : index =
   | _ -> raise_parse_error s "Not an index"
 ;;
 
-let identifier_of_asexp (s : Annot.t) : identifier =
-  match s.sexp with
-  | AAtom name ->
-    if valid_ident name
-    then mk_id_simple ~loc:s.loc name
-    else raise_parse_error s (Fmt.str "%s is not an identifier." name)
-  | AList ({ sexp = AAtom "_"; _ } :: main_s :: i0 :: indexes) ->
-    mk_id_indexed
-      ~loc:s.loc
-      (symbol_of_asexp main_s)
-      (List.map ~f:index_of_asexp (i0 :: indexes))
-  | _ -> raise_parse_error s "Not an identifier."
-;;
-
 let rec sygus_sort_of_asexp (s : Annot.t) : sygus_sort =
   try mk_sort ~loc:s.loc (identifier_of_asexp s) with
   | _ ->
@@ -158,6 +144,21 @@ let rec sygus_sort_of_asexp (s : Annot.t) : sygus_sort =
         (identifier_of_asexp id)
         (List.map ~f:sygus_sort_of_asexp (s1 :: sygus_sorts))
     | _ -> raise_parse_error s "Not a sygus_sort")
+
+and identifier_of_asexp (s : Annot.t) : identifier =
+  match s.sexp with
+  | AAtom name ->
+    if valid_ident name
+    then mk_id_simple ~loc:s.loc name
+    else raise_parse_error s (Fmt.str "%s is not an identifier." name)
+  | AList ({ sexp = AAtom "_"; _ } :: main_s :: i0 :: indexes) ->
+    mk_id_indexed
+      ~loc:s.loc
+      (symbol_of_asexp main_s)
+      (List.map ~f:index_of_asexp (i0 :: indexes))
+  | AList [ { sexp = AAtom "as"; _ }; main_s; sort_s ] ->
+    mk_id_qual ~loc:s.loc (symbol_of_asexp main_s) (sygus_sort_of_asexp sort_s)
+  | _ -> raise_parse_error s "Not an identifier."
 ;;
 
 let sorted_var_of_asexp (s : Annot.t) : sorted_var =
@@ -214,6 +215,7 @@ let rec sygus_term_of_asexp (s : Annot.t) : sygus_term =
       ~loc:s.loc
       (List.map ~f:binding_of_asexp bindings)
       (sygus_term_of_asexp sygus_term)
+  | AList ({ sexp = AAtom "as"; _ } :: _) -> mk_t_id ~loc:s.loc (identifier_of_asexp s)
   | AList (hd :: tl) ->
     mk_t_app ~loc:s.loc (identifier_of_asexp hd) (List.map ~f:sygus_term_of_asexp tl)
   | _ ->
